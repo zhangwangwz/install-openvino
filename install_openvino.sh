@@ -40,6 +40,10 @@ if [ ! "$(printf '%s\n' "$required_cmake_ver" "$current_cmake_version" | sort -V
     rm -rf cmake-3.18.4 cmake-3.18.4.tar.gz
 fi
 
+cd ~
+git clone https://github.com/openvinotoolkit/openvino.git --recursive
+#git clone https://gitcode.net/mirrors/openvinotoolkit/openvino.git --recursive
+git submodule update --init --recursive
 cd ~/openvino
 pip install -r src/bindings/python/src/compatibility/openvino/requirements-dev.txt --user
 mkdir build
