@@ -2,7 +2,7 @@
 
 Install openvino and open model zoo in Raspberry Pi
 
-Requirements: opencv==4.5.5
+Requirements: opencv==4.5.5 Tensorflow>=2.5.0
 
 Usage:
 
