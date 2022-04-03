@@ -1,6 +1,8 @@
 # install-openvino
 
-Install openvino in Raspberry Pi
+Install openvino and open model zoo in Raspberry Pi
+
+Requirements: opencv==4.5.5
 
 Usage:
 
