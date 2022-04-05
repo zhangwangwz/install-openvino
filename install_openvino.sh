@@ -41,11 +41,17 @@ if [ ! "$(printf '%s\n' "$required_cmake_ver" "$current_cmake_version" | sort -V
 fi
 
 cd ~
+sudo rm -rf openvino*
 git clone https://github.com/openvinotoolkit/openvino.git --recursive
 #git clone https://gitcode.net/mirrors/openvinotoolkit/openvino.git --recursive
-git submodule update --init --recursive
 cd ~/openvino
-pip install -r src/bindings/python/src/compatibility/openvino/requirements-dev.txt --user
+git submodule update --init --recursive
+while [ $? -ne 0 ]
+do
+	git submodule update --init --recursive
+done
+cd ~/openvino
+pip install -r src/bindings/python/src/compatibility/openvino/requirements-dev.txt 
 mkdir build
 cd build
 
@@ -68,8 +74,11 @@ source ~/.bashrc
 sudo usermod -a -G users "$(whoami)"
 bash /opt/intel/openvino/install_dependencies/install_NCS_udev_rules.sh
 cd ~
+sudo rm -rf open_model_zoo*
 git clone https://github.com/openvinotoolkit/open_model_zoo.git
+#git clone https://gitee.com/zhang-huanshu/open_model_zoo.git --recursive
 cd ~/open_model_zoo/tools/model_tools
 pip install --upgrade pip
-pip install . --user
+pip install . 
+pip install ~/open_model_zoo/demos/common/python
 
