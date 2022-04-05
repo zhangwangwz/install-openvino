@@ -13,4 +13,4 @@ bash install_openvino.sh
 
 Openvino will be installed in /opt/intel/openvino
 
-InferenceEngine_DIR=/home/pi/openvino/build    (For install Opencv with WITH_INF_ENGINE=ON) 
+InferenceEngine_DIR=/path/to/openvino/build    (For install Opencv with WITH_INF_ENGINE=ON) 
