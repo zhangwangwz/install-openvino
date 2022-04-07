@@ -9,7 +9,7 @@ if you have installed openvino before and want to reinstall openvino, please mak
 ```shell
 source /path/to/openvino/setupvars.sh
 ```
-from ~/.bashrc and reboot.
+from ~/.bashrc and rebooted.
 
 Usage:
 
