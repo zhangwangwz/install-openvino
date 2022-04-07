@@ -1,5 +1,6 @@
 #!/bin/bash
  sudo -E apt update
+ sudo apt-get dist-upgrade -y
  sudo -E apt-get install -y \
               build-essential \
               curl \
@@ -50,6 +51,14 @@ while [ $? -ne 0 ]
 do
 	git submodule update --init --recursive
 done
+cd ~
+git clone https://github.com/openvinotoolkit/openvino_contrib.git --recursive
+cd ~/openvino_contrib
+git submodule update --init --recursive
+while [ $? -ne 0 ]
+do
+	git submodule update --init --recursive
+done
 cd ~/openvino
 pip install -r src/bindings/python/src/compatibility/openvino/requirements-dev.txt 
 mkdir build
@@ -65,6 +74,7 @@ cmake -DCMAKE_INSTALL_PREFIX=/opt/intel/openvino \
 	 -DPYTHON_LIBRARY=/usr/lib/aarch64-linux-gnu/libpython3.9.so \
 	 -DPYTHON_INCLUDE_DIR=/usr/include/python3.9 \
 	 -DENABLE_OV_ONNX_FRONTEND=ON \
+	 -DIE_EXTRA_MODULES=~/openvino_contrib/modules \
 	 -DWITH_TBB=ON ..
 
 make --jobs=$(nproc --all) 
@@ -81,4 +91,5 @@ cd ~/open_model_zoo/tools/model_tools
 pip install --upgrade pip
 pip install . 
 pip install ~/open_model_zoo/demos/common/python
+
 
