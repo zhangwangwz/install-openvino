@@ -25,24 +25,25 @@
               libgstreamer1.0-0 \
               gstreamer1.0-plugins-base \
               libusb-1.0-0-dev \
-              libopenblas-dev
+              libopenblas-dev \
+	    ca-certificates \
+	    autoconf \
+	    automake \
+	    libtool \
+	    zlib1g zlib1g-dev \
+	    bash-completion \
+	    locate curl \
+	    cpio libtinfo-dev jq \
+	    libusb-1.0-0-dev patchelf \
+	    python3-venv
 if apt-cache search --names-only '^libpng12-dev'| grep -q libpng12; then
     sudo -E apt-get install -y libpng12-dev
 else
     sudo -E apt-get install -y libpng-dev
 fi
 
-current_cmake_version=$(cmake --version | sed -ne 's/[^0-9]*\(\([0-9]\.\)\{0,4\}[0-9][^.]\).*/\1/p')
-required_cmake_ver=3.17
-if [ ! "$(printf '%s\n' "$required_cmake_ver" "$current_cmake_version" | sort -V | head -n1)" = "$required_cmake_ver" ]; then
-    wget "https://github.com/Kitware/CMake/releases/download/v3.18.4/cmake-3.18.4.tar.gz"
-    tar xf cmake-3.18.4.tar.gz
-    (cd cmake-3.18.4 && ./bootstrap --parallel="$(nproc --all)" && make --jobs="$(nproc --all)" && sudo make install)
-    rm -rf cmake-3.18.4 cmake-3.18.4.tar.gz
-fi
-
 cd ~
-sudo rm -rf openvino*
+sudo rm -rf openvino* 
 git clone https://github.com/openvinotoolkit/openvino.git --recursive
 #git clone https://gitcode.net/mirrors/openvinotoolkit/openvino.git --recursive
 cd ~/openvino
@@ -61,6 +62,7 @@ do
 done
 cd ~/openvino
 pip install -r src/bindings/python/src/compatibility/openvino/requirements-dev.txt 
+pip install onnx --upgrade
 mkdir build
 cd build
 
@@ -84,12 +86,33 @@ source ~/.bashrc
 sudo usermod -a -G users "$(whoami)"
 bash /opt/intel/openvino/install_dependencies/install_NCS_udev_rules.sh
 cd ~
-sudo rm -rf open_model_zoo*
-git clone https://github.com/openvinotoolkit/open_model_zoo.git
-#git clone https://gitee.com/zhang-huanshu/open_model_zoo.git --recursive
-cd ~/open_model_zoo/tools/model_tools
-pip install --upgrade pip
-pip install . 
-pip install ~/open_model_zoo/demos/common/python
+python -c "import openvino"
+if [ $? -ne 0 ];then
+	echo "Failed"
+else
+	ls open_model_zoo*
+	if [ $? -ne 0 ];then
+		echo "Open Model Zoo has been installed, ignoring"
+	else
+		git clone https://github.com/openvinotoolkit/open_model_zoo.git
+		#git clone https://gitee.com/zhang-huanshu/open_model_zoo.git --recursive
+		cd ~/open_model_zoo/tools/model_tools
+		pip install --upgrade pip
+		pip install . 
+		pip install ~/open_model_zoo/demos/common/python
+	fi
+	pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu --upgrade
+	cd ~
+	git clone https://github.com/openvinotoolkit/openvino_tensorflow.git --recursive
+	cd ~/openvino_tensorflow
+	git submodule update --init --recursive
+	while [ $? -ne 0 ]
+	do
+		git submodule update --init --recursive
+	done
+	pip install psutil --upgrade
+	python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location=/opt/intel/openvino/
+	echo "Success"
+fi
 
 
