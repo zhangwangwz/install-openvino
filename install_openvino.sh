@@ -1,5 +1,5 @@
 #!/bin/bash
- sudo -E apt update
+ sudo -E apt-get update
  sudo apt-get dist-upgrade -y
  sudo -E apt-get install -y \
               build-essential \
@@ -62,7 +62,7 @@ do
 done
 cd ~/openvino
 pip install -r src/bindings/python/src/compatibility/openvino/requirements-dev.txt 
-pip install onnx --upgrade
+pip install onnx fastjsonschema pandas cython numpy --upgrade
 mkdir build
 cd build
 
@@ -70,6 +70,8 @@ cmake -DCMAKE_INSTALL_PREFIX=/opt/intel/openvino \
 	 -DCMAKE_BUILD_TYPE=Release \
 	 -DENABLE_OPENCV=ON \
 	 -DENABLE_PYTHON=ON \
+	 -DENABLE_MKL_DNN=ON \
+	 -DENABLE_WHEEL=ON \
 	 -DNGRAPH_PYTHON_BUILD_ENABLE=ON \
 	 -DNGRAPH_ONNX_IMPORT_ENABLE=ON \
 	 -DPYTHON_EXECUTABLE=`which python3.9` \
@@ -82,36 +84,39 @@ cmake -DCMAKE_INSTALL_PREFIX=/opt/intel/openvino \
 make --jobs=$(nproc --all) 
 sudo make install
 echo "source /opt/intel/openvino/setupvars.sh" >> ~/.bashrc
+echo "export PYTHONPATH=$PYTHONPATH:/opt/intel/openvino/python/python3.9" >>~/.bashrc
 source ~/.bashrc
 sudo usermod -a -G users "$(whoami)"
 bash /opt/intel/openvino/install_dependencies/install_NCS_udev_rules.sh
+pip install onnx fastjsonschema pandas cython --upgrade
 cd ~
 python -c "import openvino"
 if [ $? -ne 0 ];then
-	echo "Failed"
+	echo "Failed to install openvino, exiting"
 else
 	ls open_model_zoo*
 	if [ $? -ne 0 ];then
 		echo "Open Model Zoo has been installed, ignoring"
 	else
+		sudo rm -rf open_model_zoo*
 		git clone https://github.com/openvinotoolkit/open_model_zoo.git
 		#git clone https://gitee.com/zhang-huanshu/open_model_zoo.git --recursive
 		cd ~/open_model_zoo/tools/model_tools
 		pip install --upgrade pip
 		pip install . 
 		pip install ~/open_model_zoo/demos/common/python
+		cd ~/openvino/tools
+		pip install cross_check_tool/ --upgrade
+		pip install mo/ --upgrade
 	fi
 	pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu --upgrade
+	pip install maturin --upgrade
 	cd ~
-	git clone https://github.com/openvinotoolkit/openvino_tensorflow.git --recursive
-	cd ~/openvino_tensorflow
-	git submodule update --init --recursive
-	while [ $? -ne 0 ]
-	do
-		git submodule update --init --recursive
-	done
-	pip install psutil --upgrade
-	python build_ovtf.py --tf_version=v2.8.0 --use_openvino_from_location=/opt/intel/openvino/
+	git clone https://github.com/nanoporetech/fast-ctc-decode.git --recursive
+	cd fast-ctc-decode
+	make build
+	cd ~/fast-ctc-decode/target/wheels
+	pip install *.whl
 	echo "Success"
 fi
 
